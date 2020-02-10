@@ -18,6 +18,9 @@ class User < ApplicationRecord
                     uniqueness: { case_sensitive: false }
   has_secure_password
   validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
+  devise :database_authenticatable, :registerable,
+       :recoverable, :rememberable, :trackable, :validatable, :omniauthable
+
     # 渡された文字列のハッシュ値を返す
   def User.digest(string)
     cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST :
@@ -89,8 +92,27 @@ class User < ApplicationRecord
     following.include?(other_user)
   end
 
+  def self.find_for_oauth(auth)
+    user = User.where(uid: auth.uid, provider: auth.provider).first
+
+    unless user
+      user = User.create(
+        uid:      auth.uid,
+        provider: auth.provider,
+        email:    User.dummy_email(auth),
+        password: Devise.friendly_token[0, 20]
+      )
+    end
+
+    user
+  end
+
   private
 
+  def self.dummy_email(auth)
+    "#{auth.uid}-#{auth.provider}@example.com"
+  end
+  
     # メールアドレスをすべて小文字にする
     def downcase_email
       self.email = email.downcase

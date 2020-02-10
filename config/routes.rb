@@ -1,8 +1,12 @@
 Rails.application.routes.draw do
-  get 'password_resets/new'
-
+devise_for :users, :controllers => {
+  :sessions      => "users/sessions",
+  :registrations => "users/registrations",
+  :passwords     => "users/passwords",
+  :omniauth_callbacks => "users/omniauth_callbacks" 
+}
+ get 'password_resets/new'
   get 'password_resets/edit'
-
   root   'static_pages#home'
   get    '/help',    to: 'static_pages#help'
   get    '/about',   to: 'static_pages#about'
